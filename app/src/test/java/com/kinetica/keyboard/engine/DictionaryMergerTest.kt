@@ -113,6 +113,8 @@ class DictionaryMergerTest {
         assertTrue(words.contains("über"))
         assertTrue(words.contains("groß"))
         // Grave accents are not German orthography: filtered on import.
+        assertFalse(words.contains("città"))
+    }
 
     @Test
     fun readPrimaryParsesTabSeparatedRows() {

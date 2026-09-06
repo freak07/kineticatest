@@ -258,7 +258,7 @@ class ReversalSplitTest {
         return Files.newBufferedReader(p!!).use { DictionaryLoader.loadWordlist(it) }
     }
     
-    private fun loadGerman(): DictionaryLoader.LoadedDictionary? {
+    private fun loadGerman() = run {
         val direct = Paths.get("src/main/assets/dictionaries/de_wordlist.txt")
         val nested: Path = Paths.get("app/src/main/assets/dictionaries/de_wordlist.txt")
         val p = when {
@@ -267,6 +267,6 @@ class ReversalSplitTest {
             else -> null
         }
         assumeTrue("de_wordlist asset not found", p != null)
-        return Files.newBufferedReader(p!!).use { DictionaryLoader.load(it) }
+        Files.newBufferedReader(p!!).use { DictionaryLoader.load(it) }
     }
 }
