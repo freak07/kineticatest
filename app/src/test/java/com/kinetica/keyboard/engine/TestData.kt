@@ -34,6 +34,26 @@ object TestData {
         }
         return KeyboardGeometry.fromPx(KEY_W, 1000f, rects, codes.toIntArray())
     }
+    
+    fun qwertzGeometry(): KeyboardGeometry {
+        val rows = listOf(
+            "qwertzuiop" to 0.0f,
+            "asdfghjkl" to 0.5f,
+            "yxcvbnm" to 1.5f,
+        )
+        val rects = ArrayList<FloatArray>()
+        val codes = ArrayList<Int>()
+        for ((rowIdx, row) in rows.withIndex()) {
+            val (letters, offsetKeys) = row
+            val top = rowIdx * 150f
+            for ((i, ch) in letters.withIndex()) {
+                val left = (offsetKeys + i) * KEY_W
+                rects.add(floatArrayOf(left, top, left + KEY_W, top + 150f))
+                codes.add(ch - 'a')
+            }
+        }
+        return KeyboardGeometry.fromPx(KEY_W, 1000f, rects, codes.toIntArray())
+    }
 
     fun smallDictionary(): Trie = Trie.build(
         listOf(

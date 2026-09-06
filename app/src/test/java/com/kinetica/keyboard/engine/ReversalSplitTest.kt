@@ -221,6 +221,30 @@ class ReversalSplitTest {
         val p = predictor.decode(punto(500L), emptyList()).map { it.word }
         assertTrue("punto not top-3 in $p", p.take(3).contains("punto"))
     }
+    
+    @Test
+    fun realGermanDictionarySwipeAndAccentDecode() {
+        val dict = loadGerman() ?: return
+        val g = TestData.qwertzGeometry()
+        // Must pass dict.forms so the predictor can restore folded accents
+        val predictor = WordPredictor(dict.trie, BigramTable.EMPTY, g, dict.forms)
+
+        // 1. Standard Swipes
+        val commonWords = listOf("hallo", "danke", "nicht", "aber", "oder")
+        for (word in commonWords) {
+            val decoded = predictor.decode(listOf(TestData.swipe(word, g, 0, 500)), emptyList())
+            assertTrue("$word missing or not top-1: ${decoded.take(3)}", decoded.firstOrNull()?.word == word)
+        }
+
+        // 2. Swipe Accent Restoration (swipe 'fur' -> decodes 'für')
+        val fuerDecoded = predictor.decode(listOf(TestData.swipe("fur", g, 0, 500)), emptyList())
+        assertTrue("für not top-1: ${fuerDecoded.take(3)}", fuerDecoded.firstOrNull()?.word == "für")
+
+        // 3. Tap Autocorrect (tap 'w', 'a', 'r', 'e' -> decodes 'wäre')
+        val wareTokens = "ware".mapIndexed { i, c -> TestData.tap(c, g, i * 100L) }
+        val wareDecoded = predictor.decode(wareTokens, emptyList())
+        assertTrue("wäre not top-1: ${wareDecoded.take(3)}", wareDecoded.firstOrNull()?.word == "wäre")
+    }
 
     private fun loadItalian(): Trie? {
         val direct = Paths.get("src/main/assets/dictionaries/it_wordlist.txt")
@@ -232,5 +256,17 @@ class ReversalSplitTest {
         }
         assumeTrue("it_wordlist asset not found", p != null)
         return Files.newBufferedReader(p!!).use { DictionaryLoader.loadWordlist(it) }
+    }
+    
+    private fun loadGerman(): DictionaryLoader.LoadedDictionary? {
+        val direct = Paths.get("src/main/assets/dictionaries/de_wordlist.txt")
+        val nested: Path = Paths.get("app/src/main/assets/dictionaries/de_wordlist.txt")
+        val p = when {
+            Files.exists(direct) -> direct
+            Files.exists(nested) -> nested
+            else -> null
+        }
+        assumeTrue("de_wordlist asset not found", p != null)
+        return Files.newBufferedReader(p!!).use { DictionaryLoader.load(it) }
     }
 }

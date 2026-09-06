@@ -100,6 +100,19 @@ class DictionaryMergerTest {
         // Ñ is not Polish orthography: filtered on import.
         assertFalse(words.contains("señal"))
     }
+    
+    @Test
+    fun germanPatternAdmitsAccentedWords() {
+        val aosp = """
+             word=über,f=200
+             word=groß,f=180
+             word=città,f=150
+        """.trimIndent()
+        val result = DictionaryMerger.merge(primary, reader(aosp), "de")
+        val words = result.rows.map { it.first }
+        assertTrue(words.contains("über"))
+        assertTrue(words.contains("groß"))
+        // Grave accents are not German orthography: filtered on import.
 
     @Test
     fun readPrimaryParsesTabSeparatedRows() {

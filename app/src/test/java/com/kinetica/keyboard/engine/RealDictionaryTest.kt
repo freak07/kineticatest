@@ -23,9 +23,9 @@ class RealDictionaryTest {
         return Paths.get("app/src/main/assets/dictionaries/$name")
     }
 
-    private fun loadTrie(): Trie {
-        val p = assetPath("en_wordlist.txt")
-        assumeTrue("wordlist asset not found", Files.exists(p))
+    private fun loadTrie(lang: String = "en"): Trie {
+        val p = assetPath("${lang}_wordlist.txt")
+        assumeTrue("${lang}_wordlist asset not found", Files.exists(p))
         return Files.newBufferedReader(p).use { DictionaryLoader.loadWordlist(it) }
     }
 
@@ -332,5 +332,42 @@ class RealDictionaryTest {
         // the tail as well.
         assertTrue("dell'anno is not a live prefix", !it.isLivePrefix("dell'anno"))
         assertTrue("anno is", it.isLivePrefix("anno"))
+    }
+    
+    @Test
+    fun germanDictionaryLoadsWithinMemoryBudget() {
+        val trie = loadTrie("de")
+        assertTrue("word count ${trie.wordCount}", trie.wordCount >= 30_000)
+        // The whole-engine budget is 8 MB; the trie itself must stay well under.
+        assertTrue("trie bytes ${trie.sizeBytes()}", trie.sizeBytes() < 4 * 1024 * 1024)
+        for (w in listOf("und", "der", "ich", "hallo")) {
+            assertTrue("missing $w", trie.contains(w))
+        }
+    }
+
+    @Test
+    fun germanBigramsLoadAndBoost() {
+        val trie = loadTrie("de")
+        val p = assetPath("de_bigrams.txt")
+        assumeTrue("de bigram asset not found", Files.exists(p))
+        val table = Files.newBufferedReader(p).use { DictionaryLoader.loadBigrams(it, trie) }
+        assertTrue("bigram count ${table.size}", table.size > 50_000)
+        assertTrue("table bytes ${table.sizeBytes()}", table.sizeBytes() < 4 * 1024 * 1024)
+        
+        val boost = table.multiplier(trie.nodeFor("ich"), trie.nodeFor("bin"))
+        assertTrue("ich->bin boost $boost", boost > 1.5f)
+    }
+
+    @Test
+    fun germanDictionarySwipeDecode() {
+        val trie = loadTrie("de")
+        val g = TestData.qwertzGeometry()
+        val predictor = WordPredictor(trie, BigramTable.EMPTY, g)
+
+        val result = predictor.decode(
+            listOf(TestData.swipe("danke", g, 0, 600)), emptyList(),
+        )
+        assertTrue(result.isNotEmpty())
+        assertEquals("danke", result[0].word)
     }
 }

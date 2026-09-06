@@ -326,5 +326,5 @@ object Prefs {
     const val DEFAULT_PECK_CHORD_KEY = "none"
 
     /** Canonical order of all bundled languages; cycling follows this order. */
-    val ALL_LANGUAGES = listOf("en", "it", "es", "pl")
+    val ALL_LANGUAGES = listOf("en", "it", "es", "pl", "de")
 }
