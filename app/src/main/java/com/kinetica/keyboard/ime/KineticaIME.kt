@@ -4,6 +4,7 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.content.res.Configuration
 import android.inputmethodservice.InputMethodService
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
@@ -1567,21 +1568,18 @@ class KineticaIME : InputMethodService(), GestureEngine.Listener, WordComposer.C
     }
 
     private fun vibrateForKeyPress() {
-        if (!config.vibration) return
-        val amplitude = when (config.vibrationIntensity) {
-            1 -> 60
-            3 -> 255
-            else -> 140
-        }
-        val v = vibrator ?: return
-        if (!v.hasVibrator()) return
-        val effect = if (v.hasAmplitudeControl()) {
-            VibrationEffect.createOneShot(12, amplitude)
-        } else {
-            VibrationEffect.createOneShot(12, VibrationEffect.DEFAULT_AMPLITUDE)
-        }
-        v.vibrate(effect)
+    if (!config.vibration) return
+    val v = vibrator ?: return
+    if (!v.hasVibrator()) return
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        val clickEffect = VibrationEffect.createPredefined(VibrationEffect.EFFECT_CLICK)
+        v.vibrate(clickEffect)
+    } else {
+        // Legacy fallback for Android 9 and below
+        v.vibrate(VibrationEffect.createOneShot(12, VibrationEffect.DEFAULT_AMPLITUDE))
     }
+	}
 
     private fun onSpace() {
         cancelAutospace()
