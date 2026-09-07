@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.RectF
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
@@ -210,6 +211,20 @@ class KeyboardView @JvmOverloads constructor(
         onDeleteChar = { listener?.onDeleteChar() },
         onStageUnits = { units, chars -> listener?.onStageDelete(units, chars) },
         onCommitStaged = { listener?.onCommitStagedDelete() },
+        onRepeatVibrate = {
+        // Use a lighter haptic for rapid 50ms repeating
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            this.performHapticFeedback(
+                HapticFeedbackConstants.TEXT_HANDLE_MOVE,
+                HapticFeedbackConstants.FLAG_IGNORE_DEFAULT_INPUT
+            )
+        } else {
+            this.performHapticFeedback(
+                HapticFeedbackConstants.KEYBOARD_PRESS,
+                HapticFeedbackConstants.FLAG_IGNORE_DEFAULT_INPUT
+				)
+			}
+		}
     )
     private var spacePointer = -1
     private var backspacePointer = -1
